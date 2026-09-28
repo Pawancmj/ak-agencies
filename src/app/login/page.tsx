@@ -64,7 +64,7 @@ export default function LoginPage() {
                 Welcome Back
               </h1>
               <p className="text-sm text-text-light">
-                Sign in to your AK Agencies account
+                Sign in to your Shreeratan Furnishing account
               </p>
             </div>
 

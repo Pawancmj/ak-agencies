@@ -58,13 +58,13 @@ export function MobileMenu() {
                 <div className="relative h-[40px] w-auto aspect-[4/3]">
                   <Image
                     src="/images/aklogo.png"
-                    alt="AK Agencies Barabanki"
+                    alt="Shreeratan Furnishing Barabanki"
                     fill
                     className="object-contain"
                     sizes="110px"
                   />
                 </div>
-                <span className="font-serif text-[16px] font-bold text-[#5B1515] tracking-tight">AK Agencies</span>
+                <span className="font-serif text-[16px] font-bold text-[#5B1515] tracking-tight">Shreeratan Furnishing</span>
               </Link>
               <button
                 onClick={toggleMobileMenu}

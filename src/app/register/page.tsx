@@ -72,7 +72,7 @@ export default function RegisterPage() {
                 Create Account
               </h1>
               <p className="text-sm text-text-light">
-                Join AK Agencies for a premium shopping experience
+                Join Shreeratan Furnishing for a premium shopping experience
               </p>
             </div>
 

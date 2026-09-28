@@ -147,7 +147,7 @@ export default function OrderConfirmationPage() {
         key: paymentData.razorpay.keyId,
         amount: paymentData.razorpay.amount,
         currency: paymentData.razorpay.currency,
-        name: 'AK Agencies',
+        name: 'Shreeratan Furnishing',
         description: `Order ${order.orderNumber}`,
         order_id: paymentData.razorpay.orderId,
         handler: async (response: RazorpayConfirmResponse) => {

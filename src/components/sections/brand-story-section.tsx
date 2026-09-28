@@ -30,7 +30,7 @@ export function BrandStorySection() {
             </h2>
             <div className="space-y-4 text-[14px] md:text-[15px] text-text-light leading-relaxed mb-8">
               <p>
-                AK Agencies, rooted in Barabanki, Uttar Pradesh, has been a trusted destination
+                Shreeratan Furnishing, rooted in Barabanki, Uttar Pradesh, has been a trusted destination
                 for premium home furnishing for over 15 years. From luxurious curtains and sofa covers
                 to elegant bedsheets and designer cushion covers — we offer a complete range of
                 home furnishing solutions at wholesale prices.
@@ -81,7 +81,7 @@ export function BrandStorySection() {
             <div className="relative rounded-2xl overflow-hidden aspect-[4/5] group">
               <img
                 src="https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=700&h=875&fit=crop"
-                alt="Beautifully furnished living room by AK Agencies"
+                alt="Beautifully furnished living room by Shreeratan Furnishing"
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />

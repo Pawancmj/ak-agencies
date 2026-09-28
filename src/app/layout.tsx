@@ -34,11 +34,11 @@ const marck = Marck_Script({
 
 export const metadata: Metadata = {
   title: {
-    default: "AK Agencies Barabanki | Premium Home Furnishing Solutions",
-    template: "%s | AK Agencies",
+    default: "Shreeratan Furnishing Barabanki | Premium Home Furnishing Solutions",
+    template: "%s | Shreeratan Furnishing",
   },
   description:
-    "AK Agencies Barabanki — Complete home furnishing solutions. Premium curtains, sofa covers, bedsheets, cushion covers, carpets, towels, and home décor. Custom stitching available. Pan India delivery.",
+    "Shreeratan Furnishing Barabanki — Complete home furnishing solutions. Premium curtains, sofa covers, bedsheets, cushion covers, carpets, towels, and home décor. Custom stitching available. Pan India delivery.",
   keywords: [
     "home furnishing",
     "curtains",
@@ -50,13 +50,13 @@ export const metadata: Metadata = {
     "home décor",
     "custom curtains",
     "Barabanki",
-    "AK Agencies",
+    "Shreeratan Furnishing",
   ],
   openGraph: {
     type: "website",
     locale: "en_IN",
-    siteName: "AK Agencies",
-    title: "AK Agencies Barabanki | Premium Home Furnishing Solutions",
+    siteName: "Shreeratan Furnishing",
+    title: "Shreeratan Furnishing Barabanki | Premium Home Furnishing Solutions",
     description:
       "Complete home furnishing solutions. Premium curtains, sofa covers, bedsheets, and more.",
   },

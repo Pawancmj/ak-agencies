@@ -36,7 +36,7 @@ export function PlaceholderImage({ label, className, variant = 'product', width 
           {label}
         </div>
         <div className={cn('mt-2 opacity-30', textColors[variant])} style={{ fontSize: `${Math.min(width, height) * 0.03}px` }}>
-          AK Agencies
+          Shreeratan Furnishing
         </div>
       </div>
     </div>

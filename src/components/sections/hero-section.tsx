@@ -250,7 +250,7 @@ export function HeroSection() {
 
       {/* Brand badge - bottom left */}
       <div className="hero-brand-badge">
-        AK Agencies · Barabanki
+        Shreeratan Furnishing · Barabanki
       </div>
     </section>
   );

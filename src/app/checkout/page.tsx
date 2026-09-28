@@ -198,7 +198,7 @@ export default function CheckoutPage() {
         key: paymentData.razorpay.keyId,
         amount: paymentData.razorpay.amount,
         currency: paymentData.razorpay.currency,
-        name: 'AK Agencies',
+        name: 'Shreeratan Furnishing',
         description: `Order ${orderNumber}`,
         order_id: paymentData.razorpay.orderId,
         handler: async (response: RazorpayResponse) => {

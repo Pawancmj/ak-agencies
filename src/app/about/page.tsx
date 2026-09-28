@@ -48,7 +48,7 @@ export default function AboutPage() {
               transition={{ delay: 0.1 }}
               className="font-serif text-4xl md:text-5xl font-bold text-primary mt-3 mb-4"
             >
-              About AK Agencies
+              About Shreeratan Furnishing
             </motion.h1>
             <div className="line-divider w-20 mx-auto mt-4 mb-6" />
             <motion.p
@@ -58,7 +58,7 @@ export default function AboutPage() {
               className="text-base md:text-lg text-text-light leading-relaxed"
             >
               Beautiful homes begin with beautiful details. Based in Barabanki, Uttar Pradesh,
-              AK Agencies is your trusted destination for premium home furnishing products.
+              Shreeratan Furnishing is your trusted destination for premium home furnishing products.
             </motion.p>
           </div>
         </section>
@@ -79,7 +79,7 @@ export default function AboutPage() {
                 <div className="line-divider w-16 mb-6" />
                 <div className="space-y-4 text-sm text-text-light leading-relaxed">
                   <p>
-                    AK Agencies was founded with a simple vision: to make premium home
+                    Shreeratan Furnishing was founded with a simple vision: to make premium home
                     furnishing accessible to every Indian home. From our base in Barabanki,
                     Uttar Pradesh, we have grown to serve customers across the country.
                   </p>
@@ -130,7 +130,7 @@ export default function AboutPage() {
           <div className="max-w-7xl mx-auto">
             <SectionHeading
               eyebrow="Why Choose Us"
-              title="The AK Agencies Difference"
+              title="The Shreeratan Furnishing Difference"
               subtitle="We bring quality, variety, and customization together"
             />
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">

@@ -342,7 +342,7 @@ export function ReelsSection() {
           </h2>
           <div className="w-14 h-[1px] bg-gradient-to-r from-transparent via-gold/50 to-transparent mx-auto mt-4 mb-3" />
           <p className="text-sm md:text-base text-text-light max-w-lg mx-auto leading-relaxed">
-            Discover inspiration, styling ideas and everyday moments from AK Agencies.
+            Discover inspiration, styling ideas and everyday moments from Shreeratan Furnishing.
           </p>
         </motion.div>
 

@@ -39,7 +39,7 @@ const aboutLinks = [
 const footerAccordionSections = [
   { title: 'Shop', links: shopLinks },
   { title: 'Customer Care', links: customerCareLinks },
-  { title: 'About AK Agencies', links: aboutLinks },
+  { title: 'About Shreeratan Furnishing', links: aboutLinks },
 ];
 
 const trustItems = [
@@ -132,7 +132,7 @@ export function Footer() {
                 <div className="relative h-[36px] w-auto aspect-[4/3]">
                   <Image
                     src="/images/aklogo.png"
-                    alt="AK Agencies Barabanki"
+                    alt="Shreeratan Furnishing Barabanki"
                     fill
                     className="object-contain brightness-0 invert opacity-80 group-hover:opacity-100 transition-opacity"
                     sizes="100px"
@@ -204,7 +204,7 @@ export function Footer() {
             {/* Col 4 — About */}
             <div>
               <h3 className="text-[10px] font-bold tracking-[0.2em] text-gold uppercase mb-5 pb-2.5 border-b border-white/10">
-                About AK Agencies
+                About Shreeratan Furnishing
               </h3>
               <ul className="space-y-2.5">
                 {aboutLinks.map((link) => (
@@ -274,7 +274,7 @@ export function Footer() {
                 <div className="relative h-[32px] w-auto aspect-[4/3]">
                   <Image
                     src="/images/aklogo.png"
-                    alt="AK Agencies Barabanki"
+                    alt="Shreeratan Furnishing Barabanki"
                     fill
                     className="object-contain brightness-0 invert opacity-80"
                     sizes="90px"
@@ -393,7 +393,7 @@ export function Footer() {
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
             <p className="text-[11px] text-white/30">
-              © 2026 AK Agencies. All Rights Reserved.
+              © 2026 Shreeratan Furnishing. All Rights Reserved.
             </p>
             <div className="flex items-center gap-5">
               <Link href="/privacy" className="text-[10px] text-white/30 hover:text-gold transition-colors">

@@ -23,7 +23,7 @@ export default function SettingsPage() {
           <div className="space-y-4 text-sm font-sans">
             <div>
               <p className="text-[#6B5E57] mb-0.5">Store Name</p>
-              <p className="text-[#241B18] font-medium">AK Agencies Barabanki</p>
+              <p className="text-[#241B18] font-medium">Shreeratan Furnishing Barabanki</p>
             </div>
             <div>
               <p className="text-[#6B5E57] mb-0.5">Currency</p>

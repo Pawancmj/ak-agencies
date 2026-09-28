@@ -94,18 +94,18 @@ export function Navbar() {
           </button>
 
           {/* Center — Brand */}
-          <Link href="/" className="flex items-center gap-2 flex-1 justify-center min-w-0 px-2" aria-label="AK Agencies Home">
+          <Link href="/" className="flex items-center gap-2 flex-1 justify-center min-w-0 px-2" aria-label="Shreeratan Furnishing Home">
             <div className="relative h-[40px] w-auto aspect-[4/3] shrink-0">
               <Image
                 src="/images/aklogo.png"
-                alt="AK Agencies"
+                alt="Shreeratan Furnishing"
                 fill
                 className="object-contain"
                 sizes="110px"
                 priority
               />
             </div>
-            <span className="font-serif text-[14px] sm:text-[15px] font-bold text-[#5B1515] tracking-tight whitespace-nowrap">AK Agencies</span>
+            <span className="font-serif text-[14px] sm:text-[15px] font-bold text-[#5B1515] tracking-tight whitespace-nowrap">Shreeratan Furnishing</span>
           </Link>
 
           {/* Right — Actions */}
@@ -152,18 +152,18 @@ export function Navbar() {
           isScrolled ? 'h-[68px]' : 'h-[80px]'
         )}>
           {/* Left — Brand */}
-          <Link href="/" className="flex items-center gap-2.5 shrink-0" aria-label="AK Agencies Home">
+          <Link href="/" className="flex items-center gap-2.5 shrink-0" aria-label="Shreeratan Furnishing Home">
             <div className="relative h-[46px] w-auto aspect-[4/3]">
               <Image
                 src="/images/aklogo.png"
-                alt="AK Agencies"
+                alt="Shreeratan Furnishing"
                 fill
                 className="object-contain"
                 sizes="160px"
                 priority
               />
             </div>
-            <span className="font-serif text-[19px] font-bold text-[#5B1515] tracking-tight whitespace-nowrap">AK Agencies</span>
+            <span className="font-serif text-[19px] font-bold text-[#5B1515] tracking-tight whitespace-nowrap">Shreeratan Furnishing</span>
           </Link>
 
           {/* Center — Compact Navigation */}
@@ -300,18 +300,18 @@ export function Navbar() {
           isScrolled ? 'h-[78px]' : 'h-[92px]'
         )}>
           {/* Left — Brand */}
-          <Link href="/" className="flex items-center gap-3 shrink-0 lg:w-[300px]" aria-label="AK Agencies Home">
+          <Link href="/" className="flex items-center gap-3 shrink-0 lg:w-[300px]" aria-label="Shreeratan Furnishing Home">
             <div className="relative h-[54px] w-auto aspect-[4/3]">
               <Image
                 src="/images/aklogo.png"
-                alt="AK Agencies Barabanki — Premium Home Furnishing"
+                alt="Shreeratan Furnishing Barabanki — Premium Home Furnishing"
                 fill
                 className="object-contain"
                 sizes="180px"
                 priority
               />
             </div>
-            <span className="font-serif text-[20px] font-bold text-[#5B1515] tracking-tight whitespace-nowrap">AK Agencies</span>
+            <span className="font-serif text-[20px] font-bold text-[#5B1515] tracking-tight whitespace-nowrap">Shreeratan Furnishing</span>
           </Link>
 
           {/* Vertical separator */}

@@ -21,7 +21,7 @@ export function WhyUsSection() {
       <div className="max-w-6xl mx-auto">
         <SectionHeading
           eyebrow="Why Choose Us"
-          title="The AK Agencies Difference"
+          title="The Shreeratan Furnishing Difference"
           subtitle="Where quality, variety, and customization come together"
         />
 

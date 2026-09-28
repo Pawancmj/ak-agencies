@@ -95,7 +95,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       >
         <div className="flex items-center justify-between h-16 px-6 border-b border-white/10">
           <Link href="/admin" className="font-display text-[#C69A45] text-lg tracking-wide">
-            AK Admin
+            Shreeratan Admin
           </Link>
           <button
             onClick={() => setSidebarOpen(false)}
