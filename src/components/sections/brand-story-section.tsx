@@ -28,7 +28,7 @@ export function BrandStorySection() {
             <h2 className="brand-story-heading">
               Beautiful Homes Begin<br />with Beautiful Details
             </h2>
-            <div className="space-y-4 text-[14px] md:text-[15px] text-text-light leading-relaxed mb-8">
+            <div className="space-y-4 text-[16px] md:text-[17px] text-text-light leading-relaxed mb-8">
               <p>
                 Shreeratan Furnishing, rooted in Barabanki, Uttar Pradesh, has been a trusted destination
                 for premium home furnishing for over 15 years. From luxurious curtains and sofa covers

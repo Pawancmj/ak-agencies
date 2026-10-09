@@ -317,6 +317,101 @@ model HomepageSettings {
   @@map("homepage_settings")
 }
 
+// ─── Custom Order Product Types ──────────────────────────────
+
+model CustomOrderProductType {
+  id           String   @id @default(cuid())
+  name         String
+  slug         String   @unique
+  description  String?
+  displayOrder Int      @default(0)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  measurementFields CustomOrderMeasurementField[]
+
+  @@index([isActive])
+  @@index([displayOrder])
+  @@map("custom_order_product_types")
+}
+
+// ─── Custom Order Measurement Fields ────────────────────────
+// Admin-defined measurement inputs per product type (Step 4 of the
+// Custom Order flow). The customer's Step 4 renders exclusively from
+// active rows here — nothing product-specific is hardcoded in the
+// frontend. fieldKey is the JSON key used in the order snapshot, so
+// it is unique per product type (DB-enforced).
+
+enum MeasurementInputType {
+  NUMBER
+  TEXT
+}
+
+model CustomOrderMeasurementField {
+  id            String   @id @default(cuid())
+  productTypeId String
+  label         String
+  fieldKey      String
+  description   String?
+  inputType     MeasurementInputType @default(NUMBER)
+  unit          String?
+  placeholder   String?
+  displayOrder  Int      @default(0)
+  isRequired    Boolean  @default(true)
+  minValue      Float?
+  maxValue      Float?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  productType CustomOrderProductType @relation(fields: [productTypeId], references: [id], onDelete: Cascade)
+
+  @@unique([productTypeId, fieldKey])
+  @@index([productTypeId, isActive])
+  @@index([productTypeId, displayOrder])
+  @@map("custom_order_measurement_fields")
+}
+
+// ─── Custom Order Fabrics & Colors ───────────────────────────
+// Fabrics and their fabric-specific colors for the Custom Order
+// flow (Step 2 Fabric → Step 3 Color). imageUrl is nullable so the
+// seeded fabrics (migration) can exist before an admin uploads art.
+
+model CustomOrderFabric {
+  id           String   @id @default(cuid())
+  name         String
+  slug         String   @unique
+  imageUrl     String?
+  displayOrder Int      @default(0)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  colors CustomOrderColor[]
+
+  @@index([isActive])
+  @@index([displayOrder])
+  @@map("custom_order_fabrics")
+}
+
+model CustomOrderColor {
+  id           String   @id @default(cuid())
+  fabricId     String
+  name         String
+  imageUrl     String?
+  displayOrder Int      @default(0)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  fabric CustomOrderFabric @relation(fields: [fabricId], references: [id], onDelete: Cascade)
+
+  @@index([fabricId])
+  @@index([fabricId, isActive])
+  @@map("custom_order_colors")
+}
+
 // ─── Contact Submissions ─────────────────────────────────────
 
 enum ContactSubmissionStatus {

@@ -141,3 +141,279 @@ export const adminContactStatusSchema = z.object({
 });
 
 export type AdminContactStatusInput = z.infer<typeof adminContactStatusSchema>;
+
+// ─── Custom Order Product Type Schemas ──────────────────────
+
+export const customOrderProductTypeSchema = z.object({
+  name: z
+    .string()
+    .min(1, 'Name is required')
+    .max(100, 'Name must be at most 100 characters')
+    .trim()
+    .refine((v) => v.length > 0, 'Name cannot be empty or whitespace'),
+  slug: z
+    .string()
+    .min(1, 'Slug is required')
+    .max(100, 'Slug must be at most 100 characters')
+    .trim()
+    .refine((v) => v.length > 0, 'Slug cannot be empty or whitespace')
+    .refine(
+      (v) => /^[a-z0-9]+(-[a-z0-9]+)*$/.test(v),
+      'Slug must contain only lowercase letters, numbers, and hyphens',
+    ),
+  description: z
+    .string()
+    .max(500, 'Description must be at most 500 characters')
+    .trim()
+    .optional()
+    .nullable(),
+  displayOrder: z.coerce
+    .number()
+    .int('Display order must be a whole number')
+    .min(0, 'Display order must be non-negative')
+    .max(9999, 'Display order must be at most 9999')
+    .optional()
+    .default(0),
+  isActive: z.boolean().optional().default(true),
+});
+
+export type CustomOrderProductTypeInput = z.infer<typeof customOrderProductTypeSchema>;
+
+// ─── Custom Order Fabric / Color Schemas ─────────────────────
+
+const customOrderNameField = z
+  .string()
+  .min(1, 'Name is required')
+  .max(100, 'Name must be at most 100 characters')
+  .trim()
+  .refine((v) => v.length > 0, 'Name cannot be empty or whitespace');
+
+const customOrderImageField = z
+  .string()
+  .min(1, 'Image URL is required')
+  .max(2000, 'Image URL must be at most 2000 characters')
+  .trim()
+  .refine((v) => v.length > 0, 'Image URL cannot be empty or whitespace');
+
+const customOrderDisplayOrderField = z.coerce
+  .number()
+  .int('Display order must be a whole number')
+  .min(0, 'Display order must be non-negative')
+  .max(9999, 'Display order must be at most 9999')
+  .optional()
+  .default(0);
+
+const customOrderActiveField = z.boolean().optional().default(true);
+
+export const customOrderFabricSchema = z.object({
+  name: customOrderNameField,
+  imageUrl: customOrderImageField,
+  displayOrder: customOrderDisplayOrderField,
+  isActive: customOrderActiveField,
+});
+
+export type CustomOrderFabricInput = z.infer<typeof customOrderFabricSchema>;
+
+// PATCH variant: every field optional and NO defaults — Zod 4 .partial()
+// keeps schema defaults (displayOrder: 0) injected, which would let a
+// missing key overwrite existing DB values on partial updates. imageUrl may
+// be null to clear it (the DB column is nullable) while '' is still rejected.
+export const customOrderFabricUpdateSchema = z.object({
+  name: customOrderNameField.optional(),
+  imageUrl: customOrderImageField.nullable().optional(),
+  displayOrder: z.coerce
+    .number()
+    .int('Display order must be a whole number')
+    .min(0, 'Display order must be non-negative')
+    .max(9999, 'Display order must be at most 9999')
+    .optional(),
+  isActive: z.boolean().optional(),
+});
+
+export type CustomOrderFabricUpdateInput = z.infer<typeof customOrderFabricUpdateSchema>;
+
+export const customOrderColorSchema = z.object({
+  fabricId: z
+    .string()
+    .min(1, 'Fabric is required')
+    .max(100, 'Fabric ID must be at most 100 characters')
+    .trim()
+    .refine((v) => v.length > 0, 'Fabric is required'),
+  name: customOrderNameField,
+  imageUrl: customOrderImageField,
+  displayOrder: customOrderDisplayOrderField,
+  isActive: customOrderActiveField,
+});
+
+export type CustomOrderColorInput = z.infer<typeof customOrderColorSchema>;
+
+// Same default-free rules as customOrderFabricUpdateSchema (see above).
+export const customOrderColorUpdateSchema = z.object({
+  fabricId: z.string().min(1).max(100).trim().optional(),
+  name: customOrderNameField.optional(),
+  imageUrl: customOrderImageField.nullable().optional(),
+  displayOrder: z.coerce
+    .number()
+    .int('Display order must be a whole number')
+    .min(0, 'Display order must be non-negative')
+    .max(9999, 'Display order must be at most 9999')
+    .optional(),
+  isActive: z.boolean().optional(),
+});
+
+export type CustomOrderColorUpdateInput = z.infer<typeof customOrderColorUpdateSchema>;
+
+// ─── Custom Order Measurement Field Schemas ─────────────────
+
+const measurementLabelField = z
+  .string()
+  .min(1, 'Label is required')
+  .max(100, 'Label must be at most 100 characters')
+  .trim()
+  .refine((v) => v.length > 0, 'Label cannot be empty or whitespace');
+
+const measurementFieldKeyField = z
+  .string()
+  .min(1, 'Field key is required')
+  .max(50, 'Field key must be at most 50 characters')
+  .trim()
+  .refine((v) => v.length > 0, 'Field key cannot be empty')
+  .refine(
+    (v) => /^[a-z0-9]+(_[a-z0-9]+)*$/.test(v),
+    'Field key must be lowercase letters, numbers, and underscores only (no spaces)',
+  );
+
+// HTML number inputs hand back strings; '' means "cleared" → undefined
+// (unset) rather than 0. z.coerce.number() would turn null into 0, which
+// would silently overwrite an existing min/max with 0 on PATCH.
+const measurementBoundField = z.preprocess((value) => {
+  if (value === '' || value === undefined) return undefined;
+  if (value === null || typeof value === 'number') return value;
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (trimmed === '') return undefined;
+    const parsed = Number(trimmed);
+    return Number.isNaN(parsed) ? value : parsed;
+  }
+  return value;
+}, z.number().nullable().optional());
+
+const measurementRangeCheck = (data: {
+  minValue?: number | null;
+  maxValue?: number | null;
+}) =>
+  !(
+    data.minValue != null &&
+    data.maxValue != null &&
+    data.minValue > data.maxValue
+  );
+
+const measurementRangeMessage = 'Minimum value cannot exceed maximum value';
+
+export const customOrderMeasurementFieldSchema = z
+  .object({
+    label: measurementLabelField,
+    // Optional: the server derives it from the label when omitted
+    // ("Seat Depth" → seat_depth) so admins only need to fill the label.
+    fieldKey: measurementFieldKeyField.optional(),
+    description: z
+      .string()
+      .max(500, 'Description must be at most 500 characters')
+      .trim()
+      .optional()
+      .nullable(),
+    inputType: z.enum(['NUMBER', 'TEXT']).optional().default('NUMBER'),
+    unit: z
+      .string()
+      .max(20, 'Unit must be at most 20 characters')
+      .trim()
+      .optional()
+      .nullable(),
+    placeholder: z
+      .string()
+      .max(200, 'Placeholder must be at most 200 characters')
+      .trim()
+      .optional()
+      .nullable(),
+    displayOrder: z.coerce
+      .number()
+      .int('Display order must be a whole number')
+      .min(0, 'Display order must be non-negative')
+      .max(9999, 'Display order must be at most 9999')
+      .optional()
+      .default(0),
+    isRequired: z.boolean().optional().default(true),
+    minValue: measurementBoundField,
+    maxValue: measurementBoundField,
+    isActive: z.boolean().optional().default(true),
+  })
+  .refine(measurementRangeCheck, {
+    message: measurementRangeMessage,
+    path: ['minValue'],
+  });
+
+export type CustomOrderMeasurementFieldInput = z.infer<
+  typeof customOrderMeasurementFieldSchema
+>;
+
+// PATCH variant: every field optional and NO defaults — schema defaults
+// must never overwrite existing DB values on partial updates (see
+// customOrderFabricUpdateSchema above). productTypeId is intentionally
+// absent so a field can never be moved to another product type.
+export const customOrderMeasurementFieldUpdateSchema = z
+  .object({
+    label: measurementLabelField.optional(),
+    fieldKey: measurementFieldKeyField.optional(),
+    description: z
+      .string()
+      .max(500, 'Description must be at most 500 characters')
+      .trim()
+      .optional()
+      .nullable(),
+    inputType: z.enum(['NUMBER', 'TEXT']).optional(),
+    unit: z
+      .string()
+      .max(20, 'Unit must be at most 20 characters')
+      .trim()
+      .optional()
+      .nullable(),
+    placeholder: z
+      .string()
+      .max(200, 'Placeholder must be at most 200 characters')
+      .trim()
+      .optional()
+      .nullable(),
+    displayOrder: z.coerce
+      .number()
+      .int('Display order must be a whole number')
+      .min(0, 'Display order must be non-negative')
+      .max(9999, 'Display order must be at most 9999')
+      .optional(),
+    isRequired: z.boolean().optional(),
+    minValue: measurementBoundField,
+    maxValue: measurementBoundField,
+    isActive: z.boolean().optional(),
+  })
+  .refine(measurementRangeCheck, {
+    message: measurementRangeMessage,
+    path: ['minValue'],
+  });
+
+export type CustomOrderMeasurementFieldUpdateInput = z.infer<
+  typeof customOrderMeasurementFieldUpdateSchema
+>;
+
+// Body schema for POST /api/custom-order/measurements/validate — the
+// server-side gate that checks a submission against the live config.
+export const customOrderMeasurementSubmitSchema = z.object({
+  productTypeId: z
+    .string()
+    .min(1, 'Product type is required')
+    .max(100, 'Product type must be at most 100 characters')
+    .trim(),
+  measurements: z.record(z.string(), z.unknown()),
+});
+
+export type CustomOrderMeasurementSubmitInput = z.infer<
+  typeof customOrderMeasurementSubmitSchema
+>;

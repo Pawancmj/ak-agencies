@@ -28,6 +28,13 @@
   --font-sans: var(--font-jost), 'Inter', -apple-system, sans-serif;
   --font-display: var(--font-cinzel), 'Georgia', serif;
   --font-script: var(--font-marck), cursive;
+
+  /* Body/paragraph scale — +1 to +2px over stock Tailwind defaults for readability */
+  --text-xs: 0.8125rem;                 /* 12px → 13px — helper/meta text */
+  --text-sm: 1rem;                      /* 14px → 16px — primary paragraph text */
+  --text-sm--line-height: 1.65;         /* paragraph line height (was ~1.43) */
+  --text-base: 1.0625rem;               /* 16px → 17px — default body text */
+  --text-base--line-height: 1.6;
 }
 
 @layer base {
@@ -45,6 +52,8 @@
     background: var(--color-background);
     color: var(--color-text);
     font-family: var(--font-sans);
+    font-size: 1.0625rem;
+    line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
@@ -488,7 +497,7 @@
 
   /* ── Subtitle ── */
   .hero-subtitle {
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 300;
     color: rgba(255, 255, 255, 0.75);
     line-height: 1.65;
@@ -497,16 +506,16 @@
     text-shadow: 0 1px 8px rgba(0, 0, 0, 0.3);
   }
   @media (min-width: 375px) {
-    .hero-subtitle { font-size: 14.5px; max-width: 320px; margin-bottom: 24px; }
+    .hero-subtitle { font-size: 15.5px; max-width: 320px; margin-bottom: 24px; }
   }
   @media (min-width: 480px) {
-    .hero-subtitle { font-size: 15px; max-width: 380px; margin-bottom: 28px; }
+    .hero-subtitle { font-size: 16px; max-width: 380px; margin-bottom: 28px; }
   }
   @media (min-width: 640px) {
-    .hero-subtitle { font-size: 16px; max-width: 440px; margin-bottom: 32px; line-height: 1.7; }
+    .hero-subtitle { font-size: 17px; max-width: 440px; margin-bottom: 32px; line-height: 1.7; }
   }
   @media (min-width: 768px) {
-    .hero-subtitle { font-size: 16.5px; max-width: 480px; margin-bottom: 36px; }
+    .hero-subtitle { font-size: 17.5px; max-width: 480px; margin-bottom: 36px; }
   }
 
   /* ── CTAs ── */
@@ -817,14 +826,14 @@
   }
 
   .usp-title {
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 700;
     color: var(--color-text);
     letter-spacing: 0.01em;
   }
 
   .usp-subtitle {
-    font-size: 10px;
+    font-size: 11px;
     color: var(--color-text-light);
     margin-top: 1px;
   }
@@ -1045,7 +1054,7 @@
   }
 
   .feat-card-subtitle {
-    font-size: 13px;
+    font-size: 14px;
     color: rgba(255, 255, 255, 0.6);
     margin-bottom: 14px;
   }
@@ -1150,7 +1159,7 @@
   }
 
   .custom-order-desc {
-    font-size: 14px;
+    font-size: 16px;
     color: var(--color-text-light);
     line-height: 1.7;
     margin-bottom: 32px;
@@ -1197,7 +1206,7 @@
   }
 
   .custom-order-step-desc {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--color-text-light);
     line-height: 1.5;
   }
@@ -1256,7 +1265,7 @@
   }
 
   .why-us-desc {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--color-text-light);
     line-height: 1.6;
   }
@@ -1364,7 +1373,7 @@
   }
 
   .review-card-text {
-    font-size: 14px;
+    font-size: 15px;
     color: var(--color-text);
     line-height: 1.7;
     font-style: italic;
@@ -1393,7 +1402,7 @@
   }
 
   .review-card-product {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--color-text-light);
     margin-top: 1px;
   }

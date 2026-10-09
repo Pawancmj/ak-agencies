@@ -16,6 +16,7 @@ import {
   X,
   LogOut,
   Mail,
+  Scissors,
 } from 'lucide-react';
 
 interface SidebarLink {
@@ -33,6 +34,17 @@ const sidebarLinks: SidebarLink[] = [
   { label: 'Orders', href: '/admin/orders', icon: ShoppingCart },
   { label: 'Customers', href: '/admin/customers', icon: Users },
   { label: 'Contact', href: '/admin/contact', icon: Mail },
+  {
+    // Prefix matches both /admin/custom-orders/* (Product Types) and
+    // /admin/custom-order/* (Fabrics, Colors).
+    label: 'Custom Orders',
+    href: '/admin/custom-order',
+    icon: Scissors,
+    children: [
+      { label: 'Product Types', href: '/admin/custom-orders/product-types' },
+      { label: 'Fabrics', href: '/admin/custom-order/fabrics' },
+    ],
+  },
   {
     label: 'Homepage',
     href: '/admin/homepage',
@@ -52,7 +64,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
-  const [homepageOpen, setHomepageOpen] = useState(false);
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
@@ -125,19 +137,24 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             }
 
             if (link.children) {
-              const isHomepageActive = pathname.startsWith('/admin/homepage');
-              const isOpen = homepageOpen || isHomepageActive;
+              const isGroupActive = pathname.startsWith(link.href);
+              const isOpen = openGroups[link.href] ?? isGroupActive;
               return (
                 <div key={link.href}>
                   <button
-                    onClick={() => setHomepageOpen((o) => !o)}
+                    onClick={() =>
+                      setOpenGroups((o) => ({
+                        ...o,
+                        [link.href]: !(o[link.href] ?? isGroupActive),
+                      }))
+                    }
                     className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-sans transition-colors ${
-                      isHomepageActive
+                      isGroupActive
                         ? 'bg-[#C69A45]/20 text-[#C69A45]'
                         : 'text-[#F8F3EA]/60 hover:text-[#F8F3EA] hover:bg-white/5'
                     }`}
                   >
-                    <Icon size={18} className={isHomepageActive ? 'text-[#C69A45]' : ''} />
+                    <Icon size={18} className={isGroupActive ? 'text-[#C69A45]' : ''} />
                     {link.label}
                     <ChevronDown
                       size={14}
@@ -147,7 +164,9 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                   {isOpen && (
                     <div className="ml-4 mt-0.5 space-y-0.5">
                       {link.children.map((child) => {
-                        const childActive = pathname === child.href;
+                        const childActive =
+                          pathname === child.href ||
+                          pathname.startsWith(`${child.href}/`);
                         return (
                           <Link
                             key={child.href}

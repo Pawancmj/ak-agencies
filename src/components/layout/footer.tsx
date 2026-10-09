@@ -80,7 +80,7 @@ export function Footer() {
               MAKE YOUR HOME BEAUTIFUL
             </h2>
             <div className="w-16 h-[1.5px] bg-gradient-to-r from-transparent via-[#C69A45] to-transparent mx-auto my-5" />
-            <p className="text-[13px] sm:text-[14px] text-[#6B5E57] mb-8 max-w-md mx-auto leading-relaxed font-medium">
+            <p className="text-[14px] sm:text-[15px] text-[#6B5E57] mb-8 max-w-md mx-auto leading-relaxed font-medium">
               Discover premium fabrics, exclusive collections, and professional styling inspiration.
             </p>
 
@@ -91,7 +91,7 @@ export function Footer() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email address"
                 required
-                className="flex-1 px-4 py-3 bg-transparent text-[13px] text-text placeholder:text-[#6B5E57]/50 focus:outline-none transition-all"
+                className="flex-1 px-4 py-3 bg-transparent text-[14px] text-text placeholder:text-[#6B5E57]/50 focus:outline-none transition-all"
               />
               <button
                 type="submit"
@@ -108,7 +108,7 @@ export function Footer() {
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 8 }}
-                  className="text-gold text-[13px] mt-5 font-semibold"
+                  className="text-gold text-[14px] mt-5 font-semibold"
                 >
                   Thank you for subscribing to our newsletter!
                 </motion.p>
@@ -139,7 +139,7 @@ export function Footer() {
                   />
                 </div>
               </Link>
-              <p className="text-[12.5px] text-white/40 leading-relaxed mb-6">
+              <p className="text-[13.5px] text-white/40 leading-relaxed mb-6">
                 Premium home furnishing solutions crafted to bring comfort, elegance, and personality to every home.
               </p>
               <div className="flex items-center gap-3.5 mt-1">
@@ -171,7 +171,7 @@ export function Footer() {
                   <li key={link.href}>
                     <Link
                       href={link.href}
-                      className="text-[12px] text-white/50 hover:text-gold transition-colors duration-200 inline-flex items-center gap-2 group"
+                      className="text-[13px] text-white/50 hover:text-gold transition-colors duration-200 inline-flex items-center gap-2 group"
                     >
                       <span className="w-1 h-1 rounded-full bg-white/20 group-hover:bg-gold transition-colors" />
                       {link.label}
@@ -191,7 +191,7 @@ export function Footer() {
                   <li key={link.href}>
                     <Link
                       href={link.href}
-                      className="text-[12px] text-white/50 hover:text-gold transition-colors duration-200 inline-flex items-center gap-2 group"
+                      className="text-[13px] text-white/50 hover:text-gold transition-colors duration-200 inline-flex items-center gap-2 group"
                     >
                       <span className="w-1 h-1 rounded-full bg-white/20 group-hover:bg-gold transition-colors" />
                       {link.label}
@@ -211,7 +211,7 @@ export function Footer() {
                   <li key={link.href + link.label}>
                     <Link
                       href={link.href}
-                      className="text-[12px] text-white/50 hover:text-gold transition-colors duration-200 inline-flex items-center gap-2 group"
+                      className="text-[13px] text-white/50 hover:text-gold transition-colors duration-200 inline-flex items-center gap-2 group"
                     >
                       <span className="w-1 h-1 rounded-full bg-white/20 group-hover:bg-gold transition-colors" />
                       {link.label}
@@ -229,27 +229,27 @@ export function Footer() {
               <div className="space-y-4">
                 <div className="flex items-start gap-2.5">
                   <MapPin size={14} strokeWidth={1.5} className="text-gold mt-0.5 shrink-0" />
-                  <p className="text-[12px] text-white/50 leading-relaxed">
+                  <p className="text-[13px] text-white/50 leading-relaxed">
                     Barabanki, Uttar Pradesh, India
                   </p>
                 </div>
                 <a
                   href="tel:+919473831097"
-                  className="flex items-center gap-2.5 text-[12px] text-white/50 hover:text-gold transition-colors group"
+                  className="flex items-center gap-2.5 text-[13px] text-white/50 hover:text-gold transition-colors group"
                 >
                   <Phone size={14} strokeWidth={1.5} className="text-gold shrink-0" />
                   <div>
-                    <p className="text-[9px] text-white/30 uppercase tracking-wider mb-0.5">Call / WhatsApp</p>
+                    <p className="text-[10px] text-white/30 uppercase tracking-wider mb-0.5">Call / WhatsApp</p>
                     <p className="group-hover:text-gold transition-colors">+91 9473831097</p>
                   </div>
                 </a>
                 <a
                   href="mailto:info@akagencies.com"
-                  className="flex items-center gap-2.5 text-[12px] text-white/50 hover:text-gold transition-colors group"
+                  className="flex items-center gap-2.5 text-[13px] text-white/50 hover:text-gold transition-colors group"
                 >
                   <Mail size={14} strokeWidth={1.5} className="text-gold shrink-0" />
                   <div>
-                    <p className="text-[9px] text-white/30 uppercase tracking-wider mb-0.5">Email</p>
+                    <p className="text-[10px] text-white/30 uppercase tracking-wider mb-0.5">Email</p>
                     <p className="group-hover:text-gold transition-colors">info@akagencies.com</p>
                   </div>
                 </a>
@@ -281,7 +281,7 @@ export function Footer() {
                   />
                 </div>
               </Link>
-              <p className="text-[12px] text-white/50 leading-relaxed mb-4 max-w-sm">
+              <p className="text-[13px] text-white/50 leading-relaxed mb-4 max-w-sm">
                 Premium home furnishing solutions crafted to bring comfort, elegance and personality to every home.
               </p>
               <div className="flex items-center gap-3 mt-1">
@@ -333,7 +333,7 @@ export function Footer() {
                           <li key={link.href + link.label}>
                             <Link
                               href={link.href}
-                              className="text-[12px] text-white/50 hover:text-gold transition-colors pl-3 inline-flex items-center gap-2"
+                              className="text-[13px] text-white/50 hover:text-gold transition-colors pl-3 inline-flex items-center gap-2"
                             >
                               <span className="w-1 h-1 rounded-full bg-white/20" />
                               {link.label}
@@ -355,14 +355,14 @@ export function Footer() {
               <div className="space-y-3">
                 <a
                   href="tel:+919473831097"
-                  className="flex items-center gap-2 text-[12px] text-white/50 hover:text-gold transition-colors"
+                  className="flex items-center gap-2 text-[13px] text-white/50 hover:text-gold transition-colors"
                 >
                   <Phone size={12} strokeWidth={1.5} className="text-gold" />
                   +91 9473831097
                 </a>
                 <a
                   href="mailto:info@akagencies.com"
-                  className="flex items-center gap-2 text-[12px] text-white/50 hover:text-gold transition-colors"
+                  className="flex items-center gap-2 text-[13px] text-white/50 hover:text-gold transition-colors"
                 >
                   <Mail size={12} strokeWidth={1.5} className="text-gold" />
                   info@akagencies.com
@@ -392,17 +392,17 @@ export function Footer() {
       <div className="bg-[#3D0E0E] border-t border-white/[0.06]">
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-            <p className="text-[11px] text-white/30">
+            <p className="text-[12px] text-white/30">
               © 2026 Shreeratan Furnishing. All Rights Reserved.
             </p>
             <div className="flex items-center gap-5">
-              <Link href="/privacy" className="text-[10px] text-white/30 hover:text-gold transition-colors">
+              <Link href="/privacy" className="text-[11px] text-white/30 hover:text-gold transition-colors">
                 Privacy
               </Link>
-              <Link href="/terms" className="text-[10px] text-white/30 hover:text-gold transition-colors">
+              <Link href="/terms" className="text-[11px] text-white/30 hover:text-gold transition-colors">
                 Terms
               </Link>
-              <Link href="/returns" className="text-[10px] text-white/30 hover:text-gold transition-colors">
+              <Link href="/returns" className="text-[11px] text-white/30 hover:text-gold transition-colors">
                 Refund Policy
               </Link>
             </div>

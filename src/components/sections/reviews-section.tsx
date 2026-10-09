@@ -96,10 +96,10 @@ export function ReviewsSection() {
               className="text-center"
             >
               <Quote size={28} className="text-gold/30 mx-auto mb-4" />
-              <p className="text-[14px] text-text leading-relaxed mb-6 italic">&ldquo;{review.comment}&rdquo;</p>
+              <p className="text-[15px] text-text leading-relaxed mb-6 italic">&ldquo;{review.comment}&rdquo;</p>
               <StarRating rating={review.rating} className="justify-center mb-3" />
               <p className="font-serif text-[15px] font-bold text-text">{review.customerName}</p>
-              <p className="text-[11px] text-text-light mt-1">{review.product} · {review.verified ? '✓ Verified' : ''}</p>
+              <p className="text-[12px] text-text-light mt-1">{review.product} · {review.verified ? '✓ Verified' : ''}</p>
             </motion.div>
           </AnimatePresence>
         </div>

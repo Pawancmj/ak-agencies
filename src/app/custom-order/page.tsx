@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowRight,
@@ -22,6 +22,25 @@ import {
 } from 'lucide-react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
+import {
+  parseProductTypesResponse,
+  type ProductTypeOption,
+} from '@/lib/custom-order-product-types';
+import {
+  parseFabricsResponse,
+  parseColorsResponse,
+  type FabricOption,
+  type ColorOption,
+} from '@/lib/custom-order-fabrics';
+import {
+  parseMeasurementsResponse,
+  validateMeasurementValues,
+  toSnapshotMeasurements,
+  formatMeasurementSummary,
+  applyProductTypeSelection,
+  type MeasurementFieldOption,
+} from '@/lib/custom-order-measurements';
+import { buildCustomOrderSnapshot } from '@/lib/custom-order-snapshot';
 
 const steps = [
   { id: 1, title: 'Product Type', icon: Layers },
@@ -35,19 +54,101 @@ const steps = [
   { id: 9, title: 'Submit', icon: Check },
 ];
 
-const productTypes = ['Curtains', 'Sofa Cover', 'Bedsheet', 'Cushion Cover', 'Table Cover', 'Towel', 'Other'];
-const fabrics = ['Cotton', 'Silk', 'Velvet', 'Linen', 'Polyester', 'Chiffon', 'Net', 'Other'];
-const colors = ['Cream', 'White', 'Maroon', 'Gold', 'Navy Blue', 'Grey', 'Beige', 'Teal', 'Other'];
 const designs = ['Floral', 'Geometric', 'Abstract', 'Plain Solid', 'Traditional', 'Modern', 'Custom (Describe Below)'];
+
+/**
+ * Image card used by Step 2 (Fabric) and Step 3 (Color). Entire card is a
+ * native button so it is keyboard accessible; selected state is conveyed
+ * via border, background, and aria-pressed.
+ */
+function OptionCard({
+  name,
+  imageUrl,
+  selected,
+  onSelect,
+}: {
+  name: string;
+  imageUrl: string | null;
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      aria-pressed={selected}
+      className={`group flex flex-col overflow-hidden rounded-xl border-2 text-left transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 ${
+        selected
+          ? 'border-gold bg-gold/5 shadow-md'
+          : 'border-border bg-white hover:border-gold/60 hover:shadow-sm'
+      }`}
+    >
+      <div className="aspect-[4/3] w-full overflow-hidden bg-cream">
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={name}
+            loading="lazy"
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center">
+            <span className="font-serif text-3xl font-bold text-primary/25">
+              {name.charAt(0).toUpperCase()}
+            </span>
+          </div>
+        )}
+      </div>
+      <div className="flex items-center justify-between gap-2 border-t border-border px-3 py-3">
+        <span
+          className={`text-sm font-medium ${
+            selected ? 'text-primary' : 'text-text-light group-hover:text-text'
+          }`}
+        >
+          {name}
+        </span>
+        {selected && (
+          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gold text-white">
+            <Check size={12} />
+          </span>
+        )}
+      </div>
+    </button>
+  );
+}
 
 export default function CustomOrderPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [submitted, setSubmitted] = useState(false);
+  const [productTypeOptions, setProductTypeOptions] = useState<ProductTypeOption[]>([]);
+  const [typesLoading, setTypesLoading] = useState(true);
+  const [typesError, setTypesError] = useState(false);
+  const [fabricOptions, setFabricOptions] = useState<FabricOption[]>([]);
+  const [fabricsLoading, setFabricsLoading] = useState(true);
+  const [fabricsError, setFabricsError] = useState(false);
+  const [colorOptions, setColorOptions] = useState<ColorOption[]>([]);
+  const [colorsLoading, setColorsLoading] = useState(false);
+  const [colorsError, setColorsError] = useState(false);
+  // Step 4 measurement configuration comes entirely from the database for
+  // the product type chosen in Step 1 — nothing product-specific is
+  // hardcoded here. The config is tagged with its productTypeId so a
+  // switch never renders another product's fields.
+  const [measurementConfig, setMeasurementConfig] = useState<{
+    typeId: string;
+    fields: MeasurementFieldOption[];
+  } | null>(null);
+  const [measurementErrorFor, setMeasurementErrorFor] = useState<string | null>(null);
+  const [touchedMeasurements, setTouchedMeasurements] = useState<Record<string, boolean>>({});
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     productType: '',
+    productTypeId: '',
     fabric: '',
+    fabricId: '',
     color: '',
-    measurements: '',
+    colorId: '',
+    measurementValues: {} as Record<string, string>,
     design: '',
     referenceImage: '',
     quantity: 1,
@@ -58,16 +159,168 @@ export default function CustomOrderPage() {
     notes: '',
   });
 
+  const loadProductTypes = useCallback(async () => {
+    setTypesLoading(true);
+    setTypesError(false);
+    try {
+      const res = await fetch('/api/custom-orders/product-types');
+      const json = await res.json().catch(() => null);
+      const parsed = parseProductTypesResponse(json);
+      if (!res.ok || !parsed.ok) {
+        setTypesError(true);
+        return;
+      }
+      setProductTypeOptions(parsed.types);
+    } catch {
+      setTypesError(true);
+    } finally {
+      setTypesLoading(false);
+    }
+  }, []);
+
+  const loadFabrics = useCallback(async () => {
+    setFabricsLoading(true);
+    setFabricsError(false);
+    try {
+      const res = await fetch('/api/custom-order/fabrics');
+      const json = await res.json().catch(() => null);
+      const parsed = parseFabricsResponse(json);
+      if (!res.ok || !parsed.ok) {
+        setFabricsError(true);
+        return;
+      }
+      setFabricOptions(parsed.fabrics);
+    } catch {
+      setFabricsError(true);
+    } finally {
+      setFabricsLoading(false);
+    }
+  }, []);
+
+  const loadColors = useCallback(async (fabricId: string) => {
+    setColorsLoading(true);
+    setColorsError(false);
+    try {
+      const res = await fetch(`/api/custom-order/fabrics/${fabricId}/colors`);
+      const json = await res.json().catch(() => null);
+      const parsed = parseColorsResponse(json);
+      if (!res.ok || !parsed.ok) {
+        setColorsError(true);
+        return;
+      }
+      setColorOptions(parsed.colors);
+    } catch {
+      setColorsError(true);
+    } finally {
+      setColorsLoading(false);
+    }
+  }, []);
+
+  const loadMeasurementFields = useCallback((typeId: string) => {
+    fetch(`/api/custom-order/product-types/${typeId}/measurements`)
+      .then((res) => (res.ok ? res.json() : Promise.reject(new Error('request failed'))))
+      .then((json) => {
+        const parsed = parseMeasurementsResponse(json);
+        if (!parsed.ok) throw new Error('malformed payload');
+        setMeasurementConfig({ typeId, fields: parsed.fields });
+        setMeasurementErrorFor(null);
+      })
+      .catch(() => {
+        setMeasurementErrorFor(typeId);
+      });
+  }, []);
+
+  useEffect(() => {
+    loadProductTypes();
+    loadFabrics();
+  }, [loadProductTypes, loadFabrics]);
+
+  // Step 3 colors are always scoped to the selected fabric.
+  useEffect(() => {
+    if (!formData.fabricId) {
+      setColorOptions([]);
+      return;
+    }
+    loadColors(formData.fabricId);
+  }, [formData.fabricId, loadColors]);
+
+  // Step 4 measurements are fetched whenever the customer reaches the step
+  // (fresh config every time, including after going Back), scoped to the
+  // product type chosen in Step 1.
+  useEffect(() => {
+    if (currentStep === 4 && formData.productTypeId) {
+      loadMeasurementFields(formData.productTypeId);
+    }
+  }, [currentStep, formData.productTypeId, loadMeasurementFields]);
+
+  const measurementFields =
+    measurementConfig && measurementConfig.typeId === formData.productTypeId
+      ? measurementConfig.fields
+      : [];
+  const measurementsFailed =
+    formData.productTypeId !== '' && measurementErrorFor === formData.productTypeId;
+  const measurementsLoading =
+    formData.productTypeId !== '' &&
+    !measurementsFailed &&
+    !(measurementConfig && measurementConfig.typeId === formData.productTypeId);
+  const measurementValidation = validateMeasurementValues(
+    measurementFields,
+    formData.measurementValues,
+  );
+
   const updateForm = (field: string, value: string | number) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
+  function selectFabric(fabric: FabricOption) {
+    setFormData((prev) => {
+      const changed = prev.fabricId !== fabric.id;
+      return {
+        ...prev,
+        fabric: fabric.name,
+        fabricId: fabric.id,
+        // A previously selected color may belong to a different fabric —
+        // clear it so Step 3 re-validates against the new selection.
+        color: changed ? '' : prev.color,
+        colorId: changed ? '' : prev.colorId,
+      };
+    });
+  }
+
+  function selectProductType(type: ProductTypeOption) {
+    const changed = formData.productTypeId !== type.id;
+    setFormData((prev) => applyProductTypeSelection(prev, type));
+    if (changed) {
+      // Measurements entered for another product type are cleared — they
+      // must never be submitted under the new product type.
+      setTouchedMeasurements({});
+      setSubmitError(null);
+    }
+  }
+
+  function selectColor(color: ColorOption) {
+    setFormData((prev) => ({ ...prev, color: color.name, colorId: color.id }));
+  }
+
+  function setMeasurementValue(fieldKey: string, value: string) {
+    setFormData((prev) => ({
+      ...prev,
+      measurementValues: { ...prev.measurementValues, [fieldKey]: value },
+    }));
+  }
+
   const canProceed = () => {
     switch (currentStep) {
-      case 1: return !!formData.productType;
-      case 2: return !!formData.fabric;
-      case 3: return !!formData.color;
-      case 4: return !!formData.measurements;
+      case 1: return !!formData.productTypeId;
+      case 2: return !!formData.fabricId;
+      case 3: return !!formData.colorId;
+      case 4:
+        if (!formData.productTypeId || measurementsLoading || measurementsFailed) {
+          return false;
+        }
+        // Zero configured fields is a legitimate product (Next stays enabled);
+        // otherwise every required field must be filled and valid.
+        return measurementValidation.ok;
       case 5: return !!formData.design;
       case 6: return true;
       case 7: return formData.quantity > 0;
@@ -77,8 +330,39 @@ export default function CustomOrderPage() {
     }
   };
 
-  const handleSubmit = () => {
-    setSubmitted(true);
+  const snapshot = buildCustomOrderSnapshot(formData, measurementFields);
+
+  const handleSubmit = async () => {
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      // Server-side re-validation against the LIVE configuration — the
+      // admin may have changed requirements between Step 4 and Submit.
+      const res = await fetch('/api/custom-order/measurements/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          productTypeId: formData.productTypeId,
+          measurements: toSnapshotMeasurements(measurementFields, formData.measurementValues),
+        }),
+      });
+
+      if (res.status === 400) {
+        const json = await res.json().catch(() => null);
+        setSubmitError(
+          json?.error ??
+            'Some measurements are invalid for this product. Please go back to Step 4 and correct them.',
+        );
+        return;
+      }
+      setSubmitted(true);
+    } catch {
+      // Endpoint unreachable — Step 4 already validated against the same
+      // rules, so don't block the customer on a network hiccup.
+      setSubmitted(true);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -203,21 +487,50 @@ export default function CustomOrderPage() {
                     {currentStep === 1 && (
                       <div>
                         <h2 className="font-serif text-xl font-bold text-primary mb-4">Select Product Type</h2>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                          {productTypes.map((type) => (
+                        {typesLoading ? (
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-3" aria-hidden="true">
+                            {Array.from({ length: 6 }).map((_, i) => (
+                              <div
+                                key={i}
+                                className="p-4 rounded-lg border border-border animate-pulse"
+                              >
+                                <div className="h-4 w-3/4 bg-cream rounded" />
+                              </div>
+                            ))}
+                          </div>
+                        ) : typesError ? (
+                          <div className="border border-border rounded-lg p-6 text-center">
+                            <p className="text-sm text-text-light mb-4">
+                              We couldn&apos;t load product types right now. Please try again.
+                            </p>
                             <button
-                              key={type}
-                              onClick={() => updateForm('productType', type)}
-                              className={`p-4 rounded-lg border text-sm font-medium transition-colors ${
-                                formData.productType === type
-                                  ? 'border-gold bg-gold/10 text-primary'
-                                  : 'border-border text-text-light hover:border-gold'
-                              }`}
+                              onClick={loadProductTypes}
+                              className="px-5 py-2.5 text-[11px] font-bold tracking-wider uppercase border-2 border-primary text-primary rounded hover:bg-primary hover:text-white transition-colors"
                             >
-                              {type}
+                              Retry
                             </button>
-                          ))}
-                        </div>
+                          </div>
+                        ) : productTypeOptions.length === 0 ? (
+                          <p className="text-sm text-text-light border border-border rounded-lg p-6 text-center">
+                            No product types are currently available.
+                          </p>
+                        ) : (
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                            {productTypeOptions.map((type) => (
+                              <button
+                                key={type.id}
+                                onClick={() => selectProductType(type)}
+                                className={`p-4 rounded-lg border text-sm font-medium transition-colors ${
+                                  formData.productTypeId === type.id
+                                    ? 'border-gold bg-gold/10 text-primary'
+                                    : 'border-border text-text-light hover:border-gold'
+                                }`}
+                              >
+                                {type.name}
+                              </button>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
 
@@ -225,59 +538,243 @@ export default function CustomOrderPage() {
                     {currentStep === 2 && (
                       <div>
                         <h2 className="font-serif text-xl font-bold text-primary mb-4">Choose Fabric</h2>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                          {fabrics.map((fabric) => (
+                        {fabricsLoading ? (
+                          <div
+                            className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4"
+                            aria-hidden="true"
+                          >
+                            {Array.from({ length: 8 }).map((_, i) => (
+                              <div
+                                key={i}
+                                className="rounded-xl border border-border overflow-hidden animate-pulse"
+                              >
+                                <div className="aspect-[4/3] bg-cream" />
+                                <div className="border-t border-border px-3 py-3">
+                                  <div className="h-4 w-2/3 bg-cream rounded" />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : fabricsError ? (
+                          <div className="border border-border rounded-lg p-6 text-center">
+                            <p className="text-sm text-text-light mb-4">
+                              We couldn&apos;t load fabrics right now. Please try again.
+                            </p>
                             <button
-                              key={fabric}
-                              onClick={() => updateForm('fabric', fabric)}
-                              className={`p-4 rounded-lg border text-sm font-medium transition-colors ${
-                                formData.fabric === fabric
-                                  ? 'border-gold bg-gold/10 text-primary'
-                                  : 'border-border text-text-light hover:border-gold'
-                              }`}
+                              onClick={loadFabrics}
+                              className="px-5 py-2.5 text-[11px] font-bold tracking-wider uppercase border-2 border-primary text-primary rounded hover:bg-primary hover:text-white transition-colors"
                             >
-                              {fabric}
+                              Retry
                             </button>
-                          ))}
-                        </div>
+                          </div>
+                        ) : fabricOptions.length === 0 ? (
+                          <p className="text-sm text-text-light border border-border rounded-lg p-6 text-center">
+                            No fabrics are currently available.
+                          </p>
+                        ) : (
+                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4">
+                            {fabricOptions.map((fabric) => (
+                              <OptionCard
+                                key={fabric.id}
+                                name={fabric.name}
+                                imageUrl={fabric.imageUrl}
+                                selected={formData.fabricId === fabric.id}
+                                onSelect={() => selectFabric(fabric)}
+                              />
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
 
-                    {/* Step 3: Color */}
+                    {/* Step 3: Color — only colors for the selected fabric */}
                     {currentStep === 3 && (
                       <div>
-                        <h2 className="font-serif text-xl font-bold text-primary mb-4">Choose Color</h2>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                          {colors.map((color) => (
+                        <h2 className="font-serif text-xl font-bold text-primary mb-1">Choose Color</h2>
+                        {formData.fabric && (
+                          <p className="text-sm text-text-light mb-4">
+                            Colors for{' '}
+                            <span className="font-medium text-primary">{formData.fabric}</span>
+                          </p>
+                        )}
+                        {!formData.fabricId ? (
+                          <p className="text-sm text-text-light border border-border rounded-lg p-6 text-center">
+                            Please go back and choose a fabric first.
+                          </p>
+                        ) : colorsLoading ? (
+                          <div
+                            className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4"
+                            aria-hidden="true"
+                          >
+                            {Array.from({ length: 4 }).map((_, i) => (
+                              <div
+                                key={i}
+                                className="rounded-xl border border-border overflow-hidden animate-pulse"
+                              >
+                                <div className="aspect-[4/3] bg-cream" />
+                                <div className="border-t border-border px-3 py-3">
+                                  <div className="h-4 w-2/3 bg-cream rounded" />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : colorsError ? (
+                          <div className="border border-border rounded-lg p-6 text-center">
+                            <p className="text-sm text-text-light mb-4">
+                              We couldn&apos;t load colors right now. Please try again.
+                            </p>
                             <button
-                              key={color}
-                              onClick={() => updateForm('color', color)}
-                              className={`p-4 rounded-lg border text-sm font-medium transition-colors ${
-                                formData.color === color
-                                  ? 'border-gold bg-gold/10 text-primary'
-                                  : 'border-border text-text-light hover:border-gold'
-                              }`}
+                              onClick={() => loadColors(formData.fabricId)}
+                              className="px-5 py-2.5 text-[11px] font-bold tracking-wider uppercase border-2 border-primary text-primary rounded hover:bg-primary hover:text-white transition-colors"
                             >
-                              {color}
+                              Retry
                             </button>
-                          ))}
-                        </div>
+                          </div>
+                        ) : colorOptions.length === 0 ? (
+                          <p className="text-sm text-text-light border border-border rounded-lg p-6 text-center">
+                            No colors are currently available for this fabric. Please go back
+                            and choose another fabric.
+                          </p>
+                        ) : (
+                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4">
+                            {colorOptions.map((color) => (
+                              <OptionCard
+                                key={color.id}
+                                name={color.name}
+                                imageUrl={color.imageUrl}
+                                selected={formData.colorId === color.id}
+                                onSelect={() => selectColor(color)}
+                              />
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
 
-                    {/* Step 4: Measurements */}
+                    {/* Step 4: Measurements — rendered 100% from the
+                        admin-configured fields for the selected product type */}
                     {currentStep === 4 && (
                       <div>
-                        <h2 className="font-serif text-xl font-bold text-primary mb-4">Enter Measurements</h2>
-                        <p className="text-sm text-text-light mb-4">
-                          Please provide the measurements in inches or centimeters.
-                        </p>
-                        <textarea
-                          value={formData.measurements}
-                          onChange={(e) => updateForm('measurements', e.target.value)}
-                          placeholder="e.g., Width: 60 inches, Length: 90 inches&#10;Or describe your window/sofa dimensions..."
-                          className="w-full h-32 px-4 py-3 bg-cream border border-border rounded-lg text-sm text-text placeholder:text-text-light focus:outline-none focus:border-gold transition-colors resize-none"
-                        />
+                        <h2 className="font-serif text-xl font-bold text-primary mb-4">Choose Measurements</h2>
+                        {!formData.productTypeId ? (
+                          <p className="text-sm text-text-light border border-border rounded-lg p-6 text-center">
+                            Please go back and choose a product type first.
+                          </p>
+                        ) : measurementsLoading ? (
+                          <div className="space-y-4" aria-hidden="true">
+                            {Array.from({ length: 3 }).map((_, i) => (
+                              <div key={i} className="animate-pulse">
+                                <div className="h-4 w-24 bg-cream rounded mb-2" />
+                                <div className="h-11 w-full bg-cream rounded" />
+                              </div>
+                            ))}
+                          </div>
+                        ) : measurementsFailed ? (
+                          <div className="border border-border rounded-lg p-6 text-center">
+                            <p className="text-sm text-text-light mb-4">
+                              We couldn&apos;t load the measurement fields right now. Please
+                              try again.
+                            </p>
+                            <button
+                              onClick={() => {
+                                if (formData.productTypeId) {
+                                  setMeasurementErrorFor(null);
+                                  loadMeasurementFields(formData.productTypeId);
+                                }
+                              }}
+                              className="px-5 py-2.5 text-[11px] font-bold tracking-wider uppercase border-2 border-primary text-primary rounded hover:bg-primary hover:text-white transition-colors"
+                            >
+                              Retry
+                            </button>
+                          </div>
+                        ) : measurementFields.length === 0 ? (
+                          <p className="text-sm text-text-light border border-border rounded-lg p-6 text-center">
+                            No measurements are currently configured for this product.
+                          </p>
+                        ) : (
+                          <>
+                            {formData.productType && (
+                              <p className="text-sm text-text-light mb-4">
+                                Measurements for{' '}
+                                <span className="font-medium text-primary">
+                                  {formData.productType}
+                                </span>
+                              </p>
+                            )}
+                            <div className="space-y-4">
+                              {measurementFields.map((field) => {
+                                const value = formData.measurementValues[field.fieldKey] ?? '';
+                                const error = measurementValidation.errors[field.fieldKey];
+                                const showError =
+                                  !!error &&
+                                  (touchedMeasurements[field.fieldKey] || value.trim() !== '');
+                                return (
+                                  <div key={field.id}>
+                                    <label
+                                      htmlFor={`measurement-${field.fieldKey}`}
+                                      className="text-xs font-bold tracking-wider uppercase text-text mb-1.5 block"
+                                    >
+                                      {field.label}
+                                      {field.isRequired && (
+                                        <span className="text-red-500 ml-0.5">*</span>
+                                      )}
+                                    </label>
+                                    {field.description && (
+                                      <p className="text-xs text-text-light mb-1.5">
+                                        {field.description}
+                                      </p>
+                                    )}
+                                    <div className="flex items-center gap-2">
+                                      <input
+                                        id={`measurement-${field.fieldKey}`}
+                                        type={field.inputType === 'NUMBER' ? 'number' : 'text'}
+                                        step={field.inputType === 'NUMBER' ? 'any' : undefined}
+                                        min={
+                                          field.inputType === 'NUMBER' && field.minValue !== null
+                                            ? field.minValue
+                                            : undefined
+                                        }
+                                        max={
+                                          field.inputType === 'NUMBER' && field.maxValue !== null
+                                            ? field.maxValue
+                                            : undefined
+                                        }
+                                        value={value}
+                                        onChange={(e) =>
+                                          setMeasurementValue(field.fieldKey, e.target.value)
+                                        }
+                                        onBlur={() =>
+                                          setTouchedMeasurements((prev) => ({
+                                            ...prev,
+                                            [field.fieldKey]: true,
+                                          }))
+                                        }
+                                        placeholder={field.placeholder ?? undefined}
+                                        aria-invalid={showError}
+                                        className="w-full px-4 py-3 bg-cream border border-border rounded text-sm text-text placeholder:text-text-light focus:outline-none focus:border-gold transition-colors"
+                                      />
+                                      {field.unit && (
+                                        <span className="shrink-0 px-3 py-3 bg-cream border border-border rounded text-sm text-text-light">
+                                          {field.unit}
+                                        </span>
+                                      )}
+                                    </div>
+                                    {showError && (
+                                      <p role="alert" className="text-xs text-red-500 mt-1">
+                                        {error}
+                                      </p>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                            {!measurementValidation.ok && (
+                              <p className="text-xs text-text-light mt-4">
+                                Complete the required measurements to continue.
+                              </p>
+                            )}
+                          </>
+                        )}
                       </div>
                     )}
 
@@ -426,15 +923,21 @@ export default function CustomOrderPage() {
                         <h2 className="font-serif text-xl font-bold text-primary mb-4">Review Your Order</h2>
                         <div className="space-y-3 bg-cream rounded-lg p-4 mb-4">
                           {[
-                            { label: 'Product Type', value: formData.productType },
-                            { label: 'Fabric', value: formData.fabric },
-                            { label: 'Color', value: formData.color },
-                            { label: 'Measurements', value: formData.measurements },
-                            { label: 'Design', value: formData.design },
-                            { label: 'Quantity', value: String(formData.quantity) },
-                            { label: 'Name', value: formData.customerName },
-                            { label: 'Phone', value: formData.customerPhone },
-                            { label: 'Email', value: formData.customerEmail },
+                            { label: 'Product Type', value: snapshot.productTypeName },
+                            { label: 'Fabric', value: snapshot.fabricName },
+                            { label: 'Color', value: snapshot.colorName },
+                            {
+                              label: 'Measurements',
+                              value: formatMeasurementSummary(
+                                measurementFields,
+                                formData.measurementValues,
+                              ),
+                            },
+                            { label: 'Design', value: snapshot.design },
+                            { label: 'Quantity', value: String(snapshot.quantity) },
+                            { label: 'Name', value: snapshot.customerName },
+                            { label: 'Phone', value: snapshot.customerPhone },
+                            { label: 'Email', value: snapshot.customerEmail },
                           ].filter(item => item.value).map((item) => (
                             <div key={item.label} className="flex justify-between text-sm">
                               <span className="text-text-light">{item.label}</span>
@@ -448,6 +951,11 @@ export default function CustomOrderPage() {
                 </AnimatePresence>
 
                 {/* Navigation */}
+                {submitError && (
+                  <div role="alert" className="mt-6 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700">
+                    {submitError}
+                  </div>
+                )}
                 <div className="flex items-center justify-between mt-8 pt-6 border-t border-border">
                   <button
                     onClick={() => setCurrentStep(Math.max(1, currentStep - 1))}
@@ -477,10 +985,10 @@ export default function CustomOrderPage() {
                   ) : (
                     <button
                       onClick={handleSubmit}
-                      className="flex items-center gap-2 px-5 sm:px-6 py-2.5 bg-gold text-white text-[11px] sm:text-xs font-bold tracking-wider uppercase rounded hover:bg-light-gold transition-colors"
+                      disabled={submitting}
+                      className="flex items-center gap-2 px-5 sm:px-6 py-2.5 bg-gold text-white text-[11px] sm:text-xs font-bold tracking-wider uppercase rounded hover:bg-light-gold disabled:opacity-60 transition-colors"
                     >
-                      <Check size={14} />
-                      Submit Order
+                      {submitting ? 'Submitting…' : (<><Check size={14} /> Submit Order</>)}
                     </button>
                   )}
                 </div>

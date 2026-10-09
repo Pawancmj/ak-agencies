@@ -66,7 +66,7 @@ export function CartDrawer() {
                     <ShoppingBag size={28} strokeWidth={1.2} className="text-border" />
                   </div>
                   <p className="font-serif text-base text-text mb-1">Your cart is empty</p>
-                  <p className="text-[13px] text-text-light mb-6">Discover our premium home furnishings</p>
+                  <p className="text-[14px] text-text-light mb-6">Discover our premium home furnishings</p>
                   <button
                     onClick={toggleCart}
                     className="px-6 py-2.5 bg-primary text-white text-[11px] font-semibold tracking-[0.12em] uppercase rounded-lg hover:bg-primary-dark transition-colors"
@@ -155,7 +155,7 @@ export function CartDrawer() {
                 {/* Free shipping notice */}
                 {state.total < 999 && (
                   <div className="py-2 px-3 bg-gold/5 rounded-lg border border-gold/10">
-                    <p className="text-[11px] text-gold font-medium">
+                    <p className="text-[12px] text-gold font-medium">
                       Add {formatPrice(999 - state.total)} more for free shipping!
                     </p>
                     <div className="mt-1.5 h-1 bg-border/30 rounded-full overflow-hidden">
