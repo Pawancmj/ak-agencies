@@ -10,8 +10,8 @@ interface HomepageSettings {
 }
 
 const defaultSettings: HomepageSettings = {
-  instagramHandle: '@akagenciesbarabanki',
-  instagramProfileUrl: 'https://instagram.com/akagencies',
+  instagramHandle: '@ak.agencies.bbk',
+  instagramProfileUrl: 'https://instagram.com/ak.agencies.bbk',
   instagramFollowText: 'Follow on Instagram',
 };
 
@@ -76,11 +76,10 @@ export default function HomepageSettingsPage() {
       </div>
 
       {feedback && (
-        <div className={`flex items-center gap-2 p-3 rounded-lg text-sm font-sans ${
-          feedback.type === 'success'
+        <div className={`flex items-center gap-2 p-3 rounded-lg text-sm font-sans ${feedback.type === 'success'
             ? 'bg-green-50 text-green-700 border border-green-200'
             : 'bg-red-50 text-red-700 border border-red-200'
-        }`}>
+          }`}>
           {feedback.type === 'success' ? <Check size={16} /> : <X size={16} />}
           {feedback.message}
         </div>
