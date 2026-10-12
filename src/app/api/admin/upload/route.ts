@@ -52,13 +52,23 @@ export async function POST(request: NextRequest) {
     if (process.env.BLOB_READ_WRITE_TOKEN) {
       // Production (Vercel): store in Vercel Blob — the serverless filesystem
       // is read-only, so writing to public/uploads fails there.
-      const blob = await put(`uploads/${filename}`, buffer, {
-        access: 'public',
-        contentType: file.type,
-        addRandomSuffix: false,
-        allowOverwrite: false,
-      });
-      url = blob.url;
+      try {
+        const blob = await put(`uploads/${filename}`, buffer, {
+          access: 'public',
+          contentType: file.type,
+          addRandomSuffix: true,
+          allowOverwrite: true,
+        });
+        url = blob.url;
+      } catch (blobError) {
+        console.error('[admin/upload] blob put failed:', blobError);
+        const detail =
+          blobError instanceof Error ? blobError.message : String(blobError);
+        return NextResponse.json(
+          { success: false, error: `Storage upload failed: ${detail}` },
+          { status: 500 },
+        );
+      }
     } else if (process.env.VERCEL) {
       return NextResponse.json(
         {
@@ -83,8 +93,9 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('[admin/upload] failed:', error);
+    const detail = error instanceof Error ? error.message : 'Upload failed';
     return NextResponse.json(
-      { success: false, error: 'Upload failed' },
+      { success: false, error: detail },
       { status: 500 },
     );
   }
