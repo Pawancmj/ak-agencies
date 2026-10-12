@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin';
+import { put } from '@vercel/blob';
 import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
 
@@ -44,20 +45,44 @@ export async function POST(request: NextRequest) {
 
     const ext = file.name.split('.').pop()?.toLowerCase() || (isImage ? 'jpg' : 'mp4');
     const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads');
-    const filepath = path.join(uploadDir, filename);
-
-    await mkdir(uploadDir, { recursive: true });
     const buffer = Buffer.from(await file.arrayBuffer());
-    await writeFile(filepath, buffer);
 
-    const url = `/uploads/${filename}`;
+    let url: string;
+
+    if (process.env.BLOB_READ_WRITE_TOKEN) {
+      // Production (Vercel): store in Vercel Blob — the serverless filesystem
+      // is read-only, so writing to public/uploads fails there.
+      const blob = await put(`uploads/${filename}`, buffer, {
+        access: 'public',
+        contentType: file.type,
+        addRandomSuffix: false,
+        allowOverwrite: false,
+      });
+      url = blob.url;
+    } else if (process.env.VERCEL) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            'Image storage is not configured. Create a Vercel Blob store (Project → Storage) and redeploy.',
+        },
+        { status: 500 },
+      );
+    } else {
+      // Local development: write to public/uploads as before.
+      const uploadDir = path.join(process.cwd(), 'public', 'uploads');
+      const filepath = path.join(uploadDir, filename);
+      await mkdir(uploadDir, { recursive: true });
+      await writeFile(filepath, buffer);
+      url = `/uploads/${filename}`;
+    }
 
     return NextResponse.json({
       success: true,
       data: { url, filename, size: file.size, type: file.type },
     });
-  } catch {
+  } catch (error) {
+    console.error('[admin/upload] failed:', error);
     return NextResponse.json(
       { success: false, error: 'Upload failed' },
       { status: 500 },
