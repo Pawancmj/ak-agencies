@@ -220,7 +220,7 @@ export default function CheckoutPage() {
               setOrderError(verifyData.error || 'Payment verification failed. Your order is pending.');
               return;
             }
-            // Payment verified — redirect to confirmation
+            // Payment verified — redirect to confirmation ()
             window.location.href = `/orders/${orderNumber}`;
           } catch {
             setOrderError('Payment verification failed. Your order is pending.');
@@ -377,13 +377,11 @@ export default function CheckoutPage() {
                   <button
                     key={s.id}
                     onClick={() => setStep(s.id)}
-                    className={`flex items-center gap-2 text-xs font-bold tracking-wider uppercase transition-colors ${
-                      step === s.id ? 'text-primary' : 'text-text-light'
-                    }`}
+                    className={`flex items-center gap-2 text-xs font-bold tracking-wider uppercase transition-colors ${step === s.id ? 'text-primary' : 'text-text-light'
+                      }`}
                   >
-                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] ${
-                      step === s.id ? 'bg-primary text-white' : 'bg-cream text-text-light'
-                    }`}>
+                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] ${step === s.id ? 'bg-primary text-white' : 'bg-cream text-text-light'
+                      }`}>
                       {i + 1}
                     </span>
                     <span className="hidden sm:inline">{s.label}</span>
@@ -426,11 +424,10 @@ export default function CheckoutPage() {
                             }
                           }}
                           placeholder="10-digit mobile number"
-                          className={`w-full px-4 py-3 border rounded text-sm text-text focus:outline-none transition-colors ${
-                            phoneError
+                          className={`w-full px-4 py-3 border rounded text-sm text-text focus:outline-none transition-colors ${phoneError
                               ? 'bg-red-50 border-red-400 focus:border-red-500'
                               : 'bg-cream border-border focus:border-gold'
-                          }`}
+                            }`}
                         />
                         {phoneError && (
                           <p className="text-xs text-red-600 mt-1">{phoneError}</p>
@@ -475,11 +472,10 @@ export default function CheckoutPage() {
                       {checkoutData.addresses.map((addr) => (
                         <label
                           key={addr.id}
-                          className={`flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-colors ${
-                            selectedAddressId === addr.id
+                          className={`flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-colors ${selectedAddressId === addr.id
                               ? 'border-gold bg-cream'
                               : 'border-border hover:border-gold'
-                          }`}
+                            }`}
                         >
                           <input
                             type="radio"
