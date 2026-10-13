@@ -1,37 +1,79 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Quote } from 'lucide-react';
 import { SectionHeading } from '@/components/ui/section-heading';
 import { StarRating } from '@/components/ui/star-rating';
-import { reviews } from '@/data/products';
+import {
+  clampIndex,
+  computeTestimonialStats,
+  getVisibleWindow,
+  nextTestimonialIndex,
+  prevTestimonialIndex,
+  type TestimonialPublic,
+} from '@/lib/testimonials';
 
-const reviewAvatars = [
-  'https://i.pravatar.cc/150?img=32',
-  'https://i.pravatar.cc/150?img=47',
-  'https://i.pravatar.cc/150?img=12',
-  'https://i.pravatar.cc/150?img=25',
-  'https://i.pravatar.cc/150?img=44',
-  'https://i.pravatar.cc/150?img=8',
-  'https://i.pravatar.cc/150?img=36',
-  'https://i.pravatar.cc/150?img=15',
-];
+function avatarInitials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return '?';
+  const first = parts[0].charAt(0);
+  const last = parts.length > 1 ? parts[parts.length - 1].charAt(0) : '';
+  return (first + last).toUpperCase();
+}
+
+function Avatar({ testimonial }: { testimonial: TestimonialPublic }) {
+  if (testimonial.customerImageUrl) {
+    return (
+      <img
+        src={testimonial.customerImageUrl}
+        alt={testimonial.customerName}
+        className="review-avatar"
+      />
+    );
+  }
+  return (
+    <span className="review-avatar flex items-center justify-center bg-[#5B1515] text-white text-[13px] font-medium font-sans">
+      {avatarInitials(testimonial.customerName)}
+    </span>
+  );
+}
 
 export function ReviewsSection() {
+  const [testimonials, setTestimonials] = useState<TestimonialPublic[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [current, setCurrent] = useState(0);
 
-  const next = () => setCurrent((prev) => (prev + 1) % reviews.length);
-  const prev = () => setCurrent((prev) => (prev - 1 + reviews.length) % reviews.length);
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/testimonials')
+      .then((res) => res.json())
+      .then((json) => {
+        if (cancelled) return;
+        if (json.success) setTestimonials(Array.isArray(json.data) ? json.data : []);
+        else setLoadFailed(true);
+      })
+      .catch(() => {
+        if (!cancelled) setLoadFailed(true);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-  const review = reviews[current];
+  const total = testimonials.length;
+  const stats = computeTestimonialStats(testimonials);
+  const index = clampIndex(current, total);
+  const review = testimonials[index];
 
-  // Show 3 reviews at a time in a grid on desktop
-  const visibleReviews = [
-    reviews[(current) % reviews.length],
-    reviews[(current + 1) % reviews.length],
-    reviews[(current + 2) % reviews.length],
-  ];
+  const next = () => setCurrent((prev) => nextTestimonialIndex(prev, total));
+  const prev = () => setCurrent((prev) => prevTestimonialIndex(prev, total));
+
+  const visibleReviews = getVisibleWindow(testimonials, index, 3);
 
   return (
     <section className="section-spacing px-5 sm:px-6 lg:px-8 bg-cream/50">
@@ -43,94 +85,123 @@ export function ReviewsSection() {
             align="left"
             className="mb-0"
           />
-          {/* Overall rating */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            className="reviews-overall shrink-0"
-          >
-            <span className="reviews-overall-score">4.8</span>
-            <StarRating rating={5} size={16} />
-            <span className="reviews-overall-label">From 2000+ reviews</span>
-          </motion.div>
-        </div>
-
-        {/* Desktop: 3-card grid */}
-        <div className="hidden md:grid md:grid-cols-3 gap-4 md:gap-5">
-          {visibleReviews.map((r, i) => (
+          {/* Overall rating — computed from active testimonials */}
+          {!loading && stats.reviewCount > 0 && (
             <motion.div
-              key={`${r.id}-${i}-${current}`}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: i * 0.08 }}
-              className="review-card"
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              className="reviews-overall shrink-0"
             >
-              <Quote size={24} className="text-gold/30 mb-4" />
-              <p className="review-card-text">&ldquo;{r.comment}&rdquo;</p>
-              <div className="review-card-footer">
-                <img
-                  src={reviewAvatars[parseInt(r.id) - 1] ?? reviewAvatars[0]}
-                  alt={r.customerName}
-                  className="review-avatar"
-                />
-                <div>
-                  <p className="review-card-name">{r.customerName}</p>
-                  <p className="review-card-product">{r.product}</p>
-                </div>
-                <StarRating rating={r.rating} size={11} className="ml-auto self-start" />
-              </div>
+              <span className="reviews-overall-score">
+                {stats.averageRating.toFixed(1)}
+              </span>
+              <StarRating rating={stats.averageRating} size={16} />
+              <span className="reviews-overall-label">
+                From {stats.reviewCount} review{stats.reviewCount === 1 ? '' : 's'}
+              </span>
             </motion.div>
-          ))}
+          )}
         </div>
 
-        {/* Mobile: single card */}
-        <div className="md:hidden relative bg-white rounded-2xl p-8 card-shadow">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={current}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -16 }}
-              transition={{ duration: 0.4 }}
-              className="text-center"
-            >
-              <Quote size={28} className="text-gold/30 mx-auto mb-4" />
-              <p className="text-[15px] text-text leading-relaxed mb-6 italic">&ldquo;{review.comment}&rdquo;</p>
-              <StarRating rating={review.rating} className="justify-center mb-3" />
-              <p className="font-serif text-[15px] font-bold text-text">{review.customerName}</p>
-              <p className="text-[12px] text-text-light mt-1">{review.product} · {review.verified ? '✓ Verified' : ''}</p>
-            </motion.div>
-          </AnimatePresence>
-        </div>
+        {loading && <div className="hidden md:block min-h-[180px]" />}
 
-        {/* Navigation */}
-        <div className="flex items-center justify-center gap-4 mt-8">
-          <button
-            onClick={prev}
-            className="review-nav-btn"
-            aria-label="Previous"
-          >
-            <ChevronLeft size={18} />
-          </button>
-          <div className="flex items-center gap-2">
-            {reviews.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setCurrent(i)}
-                className={`review-dot transition-all duration-300 ${i === current ? 'review-dot-active' : 'review-dot-inactive'}`}
-                aria-label={`Go to review ${i + 1}`}
-              />
-            ))}
+        {!loading && loadFailed && (
+          <div className="bg-white rounded-2xl p-8 card-shadow text-center max-w-xl mx-auto">
+            <Quote size={28} className="text-gold/30 mx-auto mb-4" />
+            <p className="text-[15px] text-text italic">
+              Reviews are unavailable right now. Please check back soon.
+            </p>
           </div>
-          <button
-            onClick={next}
-            className="review-nav-btn"
-            aria-label="Next"
-          >
-            <ChevronRight size={18} />
-          </button>
-        </div>
+        )}
+
+        {!loading && !loadFailed && total === 0 && (
+          <div className="bg-white rounded-2xl p-8 md:py-12 card-shadow text-center max-w-xl mx-auto">
+            <Quote size={28} className="text-gold/30 mx-auto mb-4" />
+            <p className="text-[15px] text-text italic mb-1">No reviews yet</p>
+            <p className="text-[13px] text-text-light">
+              Check back soon to see what our customers are saying.
+            </p>
+          </div>
+        )}
+
+        {!loading && !loadFailed && total > 0 && (
+          <>
+            {/* Desktop: 3-card grid */}
+            <div className="hidden md:grid md:grid-cols-3 gap-4 md:gap-5">
+              {visibleReviews.map((r, i) => (
+                <motion.div
+                  key={`${r.id}-${i}-${index}`}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: i * 0.08 }}
+                  className="review-card"
+                >
+                  <Quote size={24} className="text-gold/30 mb-4" />
+                  <p className="review-card-text">&ldquo;{r.reviewText}&rdquo;</p>
+                  <div className="review-card-footer">
+                    <Avatar testimonial={r} />
+                    <div>
+                      <p className="review-card-name">{r.customerName}</p>
+                      <p className="review-card-product">{r.productName}</p>
+                    </div>
+                    <StarRating rating={r.rating} size={11} className="ml-auto self-start" />
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+
+            {/* Mobile: single card */}
+            <div className="md:hidden relative bg-white rounded-2xl p-8 card-shadow">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={`${review.id}-${index}`}
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -16 }}
+                  transition={{ duration: 0.4 }}
+                  className="text-center"
+                >
+                  <Quote size={28} className="text-gold/30 mx-auto mb-4" />
+                  <p className="text-[15px] text-text leading-relaxed mb-6 italic">
+                    &ldquo;{review.reviewText}&rdquo;
+                  </p>
+                  <StarRating rating={review.rating} className="justify-center mb-3" />
+                  <p className="font-serif text-[15px] font-bold text-text">
+                    {review.customerName}
+                  </p>
+                  {review.productName && (
+                    <p className="text-[12px] text-text-light mt-1">{review.productName}</p>
+                  )}
+                </motion.div>
+              </AnimatePresence>
+            </div>
+
+            {/* Navigation */}
+            {total > 1 && (
+              <div className="flex items-center justify-center gap-4 mt-8">
+                <button onClick={prev} className="review-nav-btn" aria-label="Previous">
+                  <ChevronLeft size={18} />
+                </button>
+                <div className="flex items-center gap-2">
+                  {testimonials.map((t, i) => (
+                    <button
+                      key={t.id}
+                      onClick={() => setCurrent(i)}
+                      className={`review-dot transition-all duration-300 ${
+                        i === index ? 'review-dot-active' : 'review-dot-inactive'
+                      }`}
+                      aria-label={`Go to review ${i + 1}`}
+                    />
+                  ))}
+                </div>
+                <button onClick={next} className="review-nav-btn" aria-label="Next">
+                  <ChevronRight size={18} />
+                </button>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </section>
   );

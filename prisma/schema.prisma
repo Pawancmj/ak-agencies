@@ -451,3 +451,26 @@ model UploadedFile {
 
   @@map("uploaded_files")
 }
+
+// --- Testimonials -------------------------------------------------
+// Homepage "What Our Customers Say" section content. The migration
+// seeds 8 demo rows (id tst_demo_1..8) copied from the previous
+// hardcoded list; they can be edited/removed from /admin/testimonials.
+
+model Testimonial {
+  id               String   @id @default(cuid())
+  customerName     String
+  reviewText       String
+  customerImageUrl String?
+  productName      String?
+  rating           Int      @default(5)
+  displayOrder     Int      @default(0)
+  isActive         Boolean  @default(true)
+  isFeatured       Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([isActive, displayOrder])
+  @@index([isActive, isFeatured])
+  @@map("testimonials")
+}

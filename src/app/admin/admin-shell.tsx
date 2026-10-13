@@ -17,6 +17,7 @@ import {
   LogOut,
   Mail,
   Scissors,
+  Quote,
 } from 'lucide-react';
 
 interface SidebarLink {
@@ -34,6 +35,7 @@ const sidebarLinks: SidebarLink[] = [
   { label: 'Orders', href: '/admin/orders', icon: ShoppingCart },
   { label: 'Customers', href: '/admin/customers', icon: Users },
   { label: 'Contact', href: '/admin/contact', icon: Mail },
+  { label: 'Testimonials', href: '/admin/testimonials', icon: Quote },
   {
     // Prefix matches both /admin/custom-orders/* (Product Types) and
     // /admin/custom-order/* (Fabrics, Colors).

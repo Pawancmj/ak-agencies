@@ -417,3 +417,80 @@ export const customOrderMeasurementSubmitSchema = z.object({
 export type CustomOrderMeasurementSubmitInput = z.infer<
   typeof customOrderMeasurementSubmitSchema
 >;
+
+// ─── Testimonial Schemas ─────────────────────────────────────
+// Homepage "What Our Customers Say" content, managed from
+// /admin/testimonials and served publicly by GET /api/testimonials.
+
+const testimonialNameField = z
+  .string()
+  .min(1, 'Customer name is required')
+  .max(100, 'Customer name must be at most 100 characters')
+  .trim()
+  .refine((v) => v.length > 0, 'Customer name cannot be empty or whitespace');
+
+const testimonialReviewField = z
+  .string()
+  .min(1, 'Review is required')
+  .max(1000, 'Review must be at most 1000 characters')
+  .trim()
+  .refine((v) => v.length > 0, 'Review cannot be empty or whitespace');
+
+const testimonialRatingField = z.coerce
+  .number()
+  .int('Rating must be a whole number')
+  .min(1, 'Rating must be at least 1')
+  .max(5, 'Rating must be at most 5');
+
+const testimonialDisplayOrderField = z.coerce
+  .number()
+  .int('Display order must be a whole number')
+  .min(0, 'Display order must be non-negative')
+  .max(9999, 'Display order must be at most 9999')
+  .optional()
+  .default(0);
+
+export const testimonialSchema = z.object({
+  customerName: testimonialNameField,
+  reviewText: testimonialReviewField,
+  // '' is rejected, null/undefined clears it (avatar is optional)
+  customerImageUrl: customOrderImageField.nullable().optional(),
+  productName: z
+    .string()
+    .max(200, 'Product name must be at most 200 characters')
+    .trim()
+    .optional()
+    .nullable(),
+  rating: testimonialRatingField.optional().default(5),
+  displayOrder: testimonialDisplayOrderField,
+  isActive: z.boolean().optional().default(true),
+  isFeatured: z.boolean().optional().default(false),
+});
+
+export type TestimonialInput = z.infer<typeof testimonialSchema>;
+
+// PATCH variant: every field optional and NO defaults — schema defaults
+// must never overwrite existing DB values on partial updates (see
+// customOrderFabricUpdateSchema above).
+export const testimonialUpdateSchema = z.object({
+  customerName: testimonialNameField.optional(),
+  reviewText: testimonialReviewField.optional(),
+  customerImageUrl: customOrderImageField.nullable().optional(),
+  productName: z
+    .string()
+    .max(200, 'Product name must be at most 200 characters')
+    .trim()
+    .optional()
+    .nullable(),
+  rating: testimonialRatingField.optional(),
+  displayOrder: z.coerce
+    .number()
+    .int('Display order must be a whole number')
+    .min(0, 'Display order must be non-negative')
+    .max(9999, 'Display order must be at most 9999')
+    .optional(),
+  isActive: z.boolean().optional(),
+  isFeatured: z.boolean().optional(),
+});
+
+export type TestimonialUpdateInput = z.infer<typeof testimonialUpdateSchema>;
